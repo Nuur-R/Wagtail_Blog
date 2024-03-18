@@ -1,0 +1,50 @@
+{% load wagtailcore_tags navigation_tags wagtailimages_tags %}
+
+<div class="group relative block bg-primary">
+  <div class="relative flex h-full transform items-end border-4 border-primary bg-base-100 transition-transform duration-300 group-hover:-translate-x-2 group-hover:-translate-y-2" onclick="window.location.href='{% pageurl blog %}';">
+    <div class="flex bg-base-100 transition">
+      <div class="rotate-180 p-2 [writing-mode:_vertical-lr]">
+          {% if blog.date_published %}
+            <time datetime="{{ blog.date_published }}" class="flex items-center justify-between gap-4 text-xs font-bold uppercase text-gray-900">
+                <span class="text-xs dark:text-primary">{{ blog.date_published|date:'d M' }}</span>
+                <span class="w-px flex-1 bg-accent"></span>
+                <span class="text-xs dark:text-primary">{{ blog.date_published|date:'Y' }}</span>
+            </time>
+          {% endif %}
+      </div>
+
+      <div class="hidden sm:block sm:basis-56">
+          {% if blog.image %}
+              {% picture blog.specific.image format-{avif,webp,jpeg,png} class="aspect-square h-full w-full object-cover" %}
+          {% endif %}
+      </div>
+
+      <div class="flex flex-1 flex-col justify-between">
+        <div class="border-s border-gray-900/10 p-4 sm:border-l-transparent sm:p-6">
+
+          <div class="container flex flex-col items-center justify-between gap-4">
+            <div class="container">
+              <h1 class="font-bold uppercase text-primary">{{ blog.title }}</h1>
+              {% for author in blog.authors %}
+                  {{ author }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+              {% if blog.introduction %}
+                  <p class="mt-2 line-clamp-3 text-sm/relaxed ">{{ blog.introduction|truncatewords:15 }}</p>
+              {% endif %}
+            </div>
+            <div class="container">
+              {% if blog.get_tags %}
+                <div class="flex justify-left items-center overflow-hidden">
+                  {% for tag in blog.get_tags %}
+                    <a href="{{ tag.url }}" class="badge badge-primary badge-sm hover:badge-success mr-2">#{{ tag }}</a>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          
+      </div>
+      </div>
+    </div>
+  </div>
+</div>

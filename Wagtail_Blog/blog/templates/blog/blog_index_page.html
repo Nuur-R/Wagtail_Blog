@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags navigation_tags wagtailimages_tags %}
+
+{% if tag %}
+    {% block title %}
+        {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}: {{ tag }}
+    {% endblock %}
+
+    {% block search_description %}Viewing all blog posts sorted by the tag {{ tag }}{% endblock %}
+{% endif %}
+
+{% block content %}
+    {% if not tag %}
+        <header class="container flex flex-col items-center justify-between p-6 mx-auto space-y-4 md:space-y-0 md:flex-row">
+            <div class="">
+                <h1 class="text-5xl font-bold text-primary">{{ page.title }}</h1>
+                <p class="py-3">{{ page.introduction }}</p>
+            </div>
+            <div class="hidden sm:hidden md:hidden lg:block border">
+                {% if page.image %}
+                    {% picture page.image format-{avif,webp,jpeg} class="lg:block max-w-sm" alt="" %}
+                {% endif %}
+            </div>
+        </header>
+    {% endif %}
+
+    <div class="container mx-auto h-screen">
+        {% if tag %}
+            <header class="container flex flex-col items-center justify-between p-6 mx-auto space-y-4 md:space-y-0 md:flex-row">
+                <div class="">
+                    <h1 class="text-5xl font-bold text-primary">Blog</h1>
+                    <p class="py-3">Ini blog tentang <span class="font-bold text-primary">{{ tag }}</span>.</p>
+                </div>
+            </header>
+        {% endif %}
+
+
+        {% if page.get_child_tags %}
+            <div class="flex justify-center items-center ">
+                {% for tag in page.get_child_tags %}
+                    <a class="badge badge-primary text-lg badge-lg hover:badge-success mr-2" aria-label="Filter by tag name {{ tag }}" href="{{ tag.url }}">#{{ tag }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="divider divider-primary"></div>
+
+        <div class="mx-auto container px-4 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {% if posts %}
+                {% for blog in posts %}
+                    {% include "blog/components/PostsCard.html" %}
+                {% endfor %}
+            {% else %}
+                <div class="col-md-12">
+                    <h1 class="text-5xl font-bold text-primary">Harusnya ini Blog</h1>
+                    <p class="py-3">Sorry my dude, masih terlalu sibuk buatbikin postingan😎<span class="font-bold text-primary">{{ tag }}</span>.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

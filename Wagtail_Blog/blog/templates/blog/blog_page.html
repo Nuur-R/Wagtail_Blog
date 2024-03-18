@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load navigation_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/draftail_extend.css' %}" />
+{% endblock extra_css %}
+
+{% block content %}
+
+    {% include "base/includes/header-blog.html" %}
+
+    <main class="container mx-auto">
+        <div class="divider divider-primary"></div>
+        <section class="px-5">
+            <div class="">
+                {% if page.authors %}
+                    <div class="container mx-auto">
+                        {% for author in page.authors %}
+                            <div class="flex items-center mt-6">
+                                {% picture author.image format-{avif,webp,jpeg} fill-50x50-c100 class="object-cover object-center w-10 h-10 rounded-full" %}
+                                <div class="mx-4">
+                                    <h1 class="text-sm text-primary">{{ author.first_name }} {{ author.last_name }}</h1>
+                                    <p class="text-sm text-primary">{{ author.job_title }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+    
+            <article class="prose max-w-full prose-xl mx-auto">
+                {{ page.body }}
+            </article>
+    
+            {% if page.get_tags %}
+                <div class="flex justify-center items-center ">
+                    {% for tag in page.get_tags %}
+                        <a href="{{ tag.url }}" class="badge badge-primary text-lg badge-lg hover:underline mr-2">#{{ tag }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+        
+        <br>
+
+    </main>
+{% endblock content %}
