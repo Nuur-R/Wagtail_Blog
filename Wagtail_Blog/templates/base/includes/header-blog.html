@@ -1,0 +1,17 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+
+<header class="hero">
+    <div class="hero-content flex-col lg:flex-row">
+        <div class="basis-1/3">
+            {% if page.image %}
+                {% picture page.image format-{avif,webp,jpeg} class="sm:hidden lg:block max-w-sm rounded-lg shadow-2xl" alt="" %}
+            {% endif %}
+        </div>
+        <div class="basis-2/3">
+            <h1 class="text-5xl font-bold">{{ page.title }}</h1>
+            <h2 class="py-1 text-3xl font-semibold">{{ page.subtitle }}</h2>
+            <p class="py-3">{{ page.introduction }}</p>
+            <p class="py-1 font-bold">Publis : {{ page.date_published }}</p>
+        </div>
+    </div>
+</header>

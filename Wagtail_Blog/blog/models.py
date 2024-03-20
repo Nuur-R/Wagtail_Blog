@@ -1,8 +1,11 @@
 from django.contrib import messages
 from django.db import models
 from django.shortcuts import redirect, render
+from django.contrib.contenttypes.fields import GenericRelation
+from django.utils.translation import gettext as _
 from modelcluster.contrib.taggit import ClusterTaggableManager
 from modelcluster.fields import ParentalKey
+from modelcluster.models import ClusterableModel
 from taggit.models import Tag, TaggedItemBase
 from wagtail.admin.panels import FieldPanel, MultipleChooserPanel
 from wagtail.contrib.routable_page.models import RoutablePageMixin, route
@@ -10,46 +13,148 @@ from wagtail.fields import StreamField
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 
-from Runutin.base.blocks import BaseStreamBlock
 
-class BlogPersonRelationship(Orderable, models.Model):
-    """
-    This defines the relationship between the `Person` within the `base`
-    app and the BlogPage below. This allows people to be added to a BlogPage.
+from wagtail.admin.panels import (
+    FieldPanel,
+    FieldRowPanel,
+    MultiFieldPanel,
+    PublishingPanel,
+)
+from wagtail.models import (
+    DraftStateMixin,
+    LockableMixin,
+    Page,
+    PreviewableMixin,
+    RevisionMixin,
+    WorkflowMixin,
+)
 
-    We have created a two way relationship between BlogPage and Person using
-    the ParentalKey and ForeignKey
-    """
+from Wagtail_Blog.base.blocks import BaseStreamBlock
 
+
+class BlogWriter(
+    WorkflowMixin,
+    DraftStateMixin,
+    LockableMixin,
+    RevisionMixin,
+    PreviewableMixin,
+    index.Indexed,
+    ClusterableModel,
+):
+    first_name = models.CharField("First name", max_length=254)
+    last_name = models.CharField("Last name", max_length=254)
+    job_title = models.CharField("Job title", max_length=254)
+
+    image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    workflow_states = GenericRelation(
+        "wagtailcore.WorkflowState",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="blog_writer",
+        for_concrete_model=False,
+    )
+
+    revisions = GenericRelation(
+        "wagtailcore.Revision",
+        content_type_field="base_content_type",
+        object_id_field="object_id",
+        related_query_name="blog_writer",
+        for_concrete_model=False,
+    )
+
+    panels = [
+        MultiFieldPanel(
+            [
+                FieldRowPanel(
+                    [
+                        FieldPanel("first_name"),
+                        FieldPanel("last_name"),
+                    ]
+                )
+            ],
+            "Name",
+        ),
+        FieldPanel("job_title"),
+        FieldPanel("image"),
+        PublishingPanel(),
+    ]
+
+    search_fields = [
+        index.SearchField("first_name"),
+        index.SearchField("last_name"),
+        index.FilterField("job_title"),
+        index.AutocompleteField("first_name"),
+        index.AutocompleteField("last_name"),
+    ]
+
+    @property
+    def thumb_image(self):
+        try:
+            return self.image.get_rendition("fill-50x50").img_tag()
+        except:
+            return ""
+
+    @property
+    def preview_modes(self):
+        return PreviewableMixin.DEFAULT_PREVIEW_MODES + [("blog_post", _("Blog post"))]
+
+    def __str__(self):
+        return "{} {}".format(self.first_name, self.last_name)
+
+    def get_preview_template(self, request, mode_name):
+        from Wagtail_Blog.blog.models import BlogPage
+
+        if mode_name == "blog_post":
+            return BlogPage.template
+        return "base/preview/person.html"
+
+    def get_preview_context(self, request, mode_name):
+        from Wagtail_Blog.blog.models import BlogPage
+
+        context = super().get_preview_context(request, mode_name)
+        if mode_name == self.default_preview_mode:
+            return context
+
+        page = BlogPage.objects.filter(blog_writer_relationship__person=self).first()
+        if page:
+            page.authors = [
+                self if author.pk == self.pk else author for author in page.authors()
+            ]
+            if not self.live:
+                page.authors.append(self)
+        else:
+            page = BlogPage.objects.first()
+            page.authors = [self]
+
+        context["page"] = page
+        return context
+
+    class Meta:
+        verbose_name = "Blog Writer"
+        verbose_name_plural = "Blog Writer"
+
+class BlogWriterRelationship(Orderable, models.Model):
     page = ParentalKey(
-        "BlogPage", related_name="blog_person_relationship", on_delete=models.CASCADE
+        "BlogPage", related_name="blog_writer_relationship", on_delete=models.CASCADE
     )
-    person = models.ForeignKey(
-        "base.Person", related_name="person_blog_relationship", on_delete=models.CASCADE
+    writer = models.ForeignKey(
+        "blog.BlogWriter", related_name="writer_blog_relationship", on_delete=models.CASCADE
     )
-    panels = [FieldPanel("person")]
-
+    panels = [FieldPanel("writer")]
 
 class BlogPageTag(TaggedItemBase):
-    """
-    This model allows us to create a many-to-many relationship between
-    the BlogPage object and tags. There's a longer guide on using it at
-    https://docs.wagtail.org/en/stable/reference/pages/model_recipes.html#tagging
-    """
-
     content_object = ParentalKey(
         "BlogPage", related_name="tagged_items", on_delete=models.CASCADE
     )
 
 class BlogPage(Page):
-    """
-    A Blog Page
-
-    We access the Person object with an inline panel that references the
-    ParentalKey's related_name in BlogPersonRelationship. More docs:
-    https://docs.wagtail.org/en/stable/topics/pages.html#inline-models
-    """
-
     introduction = models.TextField(help_text="Text to describe the page", blank=True)
     image = models.ForeignKey(
         "wagtailimages.Image",
@@ -73,8 +178,8 @@ class BlogPage(Page):
         FieldPanel("body"),
         FieldPanel("date_published"),
         MultipleChooserPanel(
-            "blog_person_relationship",
-            chooser_field_name="person",
+            "blog_writer_relationship",
+            chooser_field_name="writer",
             heading="Authors",
             label="Author",
             panels=None,
@@ -88,28 +193,15 @@ class BlogPage(Page):
     ]
 
     def authors(self):
-        """
-        Returns the BlogPage's related people. Again note that we are using
-        the ParentalKey's related_name from the BlogPersonRelationship model
-        to access these objects. This allows us to access the Person objects
-        with a loop on the template. If we tried to access the blog_person_
-        relationship directly we'd print `blog.BlogPersonRelationship.None`
-        """
-        # Only return authors that are not in draft
         return [
-            n.person
-            for n in self.blog_person_relationship.filter(
+            n.writer
+            for n in self.blog_writer_relationship.filter(
                 person__live=True
-            ).select_related("person")
+            ).select_related("writer")
         ]
 
     @property
     def get_tags(self):
-        """
-        Similar to the authors function above we're returning all the tags that
-        are related to the blog post into a list we can access on the template.
-        We're additionally adding a URL to access BlogPage objects with that tag
-        """
         tags = self.tags.all()
         base_url = self.get_parent().url
         for tag in tags:

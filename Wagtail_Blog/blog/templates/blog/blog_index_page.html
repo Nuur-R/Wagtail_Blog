@@ -1,9 +1,13 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags navigation_tags wagtailimages_tags %}
+{% load wagtailcore_tags navigation_tags wagtailimages_tags static %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+{% endblock extra_css %}
 
 {% if tag %}
     {% block title %}
-        {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %}: {{ tag }}
+        {% if self.seo_title %}{{ self.seo_title }}{% else %}{{ self.title }}{% endif %} {{ tag }}
     {% endblock %}
 
     {% block search_description %}Viewing all blog posts sorted by the tag {{ tag }}{% endblock %}
