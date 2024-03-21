@@ -32,7 +32,7 @@ from wagtail.models import (
 from Wagtail_Blog.base.blocks import BaseStreamBlock
 
 
-class BlogWriter(
+class Writer(
     WorkflowMixin,
     DraftStateMixin,
     LockableMixin,
@@ -57,7 +57,7 @@ class BlogWriter(
         "wagtailcore.WorkflowState",
         content_type_field="base_content_type",
         object_id_field="object_id",
-        related_query_name="blog_writer",
+        related_query_name="writer",
         for_concrete_model=False,
     )
 
@@ -65,7 +65,7 @@ class BlogWriter(
         "wagtailcore.Revision",
         content_type_field="base_content_type",
         object_id_field="object_id",
-        related_query_name="blog_writer",
+        related_query_name="writer",
         for_concrete_model=False,
     )
 
@@ -96,9 +96,11 @@ class BlogWriter(
 
     @property
     def thumb_image(self):
+        # Returns an empty string if there is no profile pic or the rendition
+        # file can't be found.
         try:
             return self.image.get_rendition("fill-50x50").img_tag()
-        except:
+        except:  # noqa: E722 FIXME: remove bare 'except:'
             return ""
 
     @property
@@ -113,7 +115,7 @@ class BlogWriter(
 
         if mode_name == "blog_post":
             return BlogPage.template
-        return "base/preview/person.html"
+        return "blog/preview/writer.html"
 
     def get_preview_context(self, request, mode_name):
         from Wagtail_Blog.blog.models import BlogPage
@@ -122,7 +124,7 @@ class BlogWriter(
         if mode_name == self.default_preview_mode:
             return context
 
-        page = BlogPage.objects.filter(blog_writer_relationship__person=self).first()
+        page = BlogPage.objects.filter(blog_writer_relationship__writer=self).first()
         if page:
             page.authors = [
                 self if author.pk == self.pk else author for author in page.authors()
@@ -138,14 +140,14 @@ class BlogWriter(
 
     class Meta:
         verbose_name = "Blog Writer"
-        verbose_name_plural = "Blog Writer"
+        verbose_name_plural = "Blog Writers"
 
 class BlogWriterRelationship(Orderable, models.Model):
     page = ParentalKey(
         "BlogPage", related_name="blog_writer_relationship", on_delete=models.CASCADE
     )
     writer = models.ForeignKey(
-        "blog.BlogWriter", related_name="writer_blog_relationship", on_delete=models.CASCADE
+        "blog.Writer", related_name="writer_blog_relationship", on_delete=models.CASCADE
     )
     panels = [FieldPanel("writer")]
 
@@ -196,7 +198,7 @@ class BlogPage(Page):
         return [
             n.writer
             for n in self.blog_writer_relationship.filter(
-                person__live=True
+                writer__live=True
             ).select_related("writer")
         ]
 
@@ -208,23 +210,10 @@ class BlogPage(Page):
             tag.url = f"{base_url}tags/{tag.slug}/"
         return tags
 
-    # Specifies parent to BlogPage as being BlogIndexPages
     parent_page_types = ["BlogIndexPage"]
-
-    # Specifies what content types can exist as children of BlogPage.
-    # Empty list means that no child content types are allowed.
     subpage_types = []
 
 class BlogIndexPage(RoutablePageMixin, Page):
-    """
-    Index page for blogs.
-    We need to alter the page model's context to return the child page objects,
-    the BlogPage objects, so that it works as an index page
-
-    RoutablePageMixin is used to allow for a custom sub-URL for the tag views
-    defined above.
-    """
-
     introduction = models.TextField(help_text="Text to describe the page", blank=True)
     image = models.ForeignKey(
         "wagtailimages.Image",
