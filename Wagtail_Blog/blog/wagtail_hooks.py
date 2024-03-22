@@ -6,12 +6,6 @@ import wagtail.admin.rich_text.editors.draftail.features as draftail_features
 from wagtail.admin.rich_text.converters.html_to_contentstate import InlineStyleElementHandler
 
 from Wagtail_Blog.blog.models import Writer
-@hooks.register("register_icons")
-def register_icons(icons):
-    return icons + [
-        "wagtailfontawesomesvg/solid/gears.svg",
-    ]
-
 
 class CustomAccessibilityItem(AccessibilityItem):
     axe_run_only = None

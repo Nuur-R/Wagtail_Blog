@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "wagtailfontawesomesvg",
     "Wagtail_Blog.base",
     "Wagtail_Blog.blog"
 ]
