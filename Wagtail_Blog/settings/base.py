@@ -49,8 +49,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "Wagtail_Blog.base",
-    "Wagtail_Blog.blog"
+    # "Wagtail_Blog.base",
+    # "Wagtail_Blog.blog"
 ]
 
 MIDDLEWARE = [
@@ -192,3 +192,6 @@ WAGTAILSEARCH_BACKENDS = {
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 WAGTAILADMIN_BASE_URL = "http://example.com"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' # To Fix BigAutoField Warning in model
+
+WAGTAILIMAGES_IMAGES_MODEL = "images.CustomImage"
+WAGTAILDOCS_DOCUMENT_MODEL = "documents.CustomDocument"

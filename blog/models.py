@@ -4,11 +4,12 @@ from django.core.exceptions import ValidationError
 from wagtail import blocks
 from wagtail.models import Page
 from wagtail.fields import RichTextField, StreamField
-from wagtail.admin.panels import FieldPanel
+from wagtail.admin.panels import FieldPanel, MultipleChooserPanel
 from wagtail.blocks import TextBlock, PageChooserBlock
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.documents.blocks import DocumentChooserBlock
 from wagtail.snippets.blocks import SnippetChooserBlock
+from wagtail.images import get_image_model
 
 from modelcluster.fields import ParentalKey
 from modelcluster.contrib.taggit import ClusterTaggableManager
@@ -54,11 +55,19 @@ class BlogDetail(Page):
     parent_page_types = ['blog.BlogIndex']
     subpage_types = []
 
+    author = models.ForeignKey('Author', null=True, blank=True, on_delete=models.SET_NULL)
     tags = ClusterTaggableManager(through=BlogPageTags, blank=True)
-    subtitle = models.CharField(max_length=255, blank=True)
+    introduction = models.TextField(help_text="Text to describe the page", blank=True)
+    image = models.ForeignKey(
+        get_image_model(),
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    date_published = models.DateField("Date article published", blank=True, null=True)
     body = StreamField(
         [
-            ('text', custom_blocks.TextBlock()),
             ('image', custom_blocks.ImageBlock()),
             ('doc', DocumentChooserBlock()),
             ('page', PageChooserBlock()),
@@ -69,17 +78,20 @@ class BlogDetail(Page):
             )),
             ('faq', custom_blocks.FAQListBlock()),
         ],
-        block_counts={
-            'text': {'min_num':1},
-            'image': {'max_num':2},
-        },
+        # block_counts={
+        #     'text': {'min_num':1},
+        #     'image': {'max_num':2},
+        # },
         use_json_field=True,
         blank=True,
         null=True,
     )
 
     content_panels = Page.content_panels + [
-        FieldPanel('subtitle'),
+        FieldPanel('introduction'),
+        FieldPanel('date_published'),
+        FieldPanel('image'),
         FieldPanel('body'),
+        FieldPanel('author'),
         FieldPanel('tags'),
     ]
