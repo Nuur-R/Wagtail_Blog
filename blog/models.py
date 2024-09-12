@@ -68,15 +68,17 @@ class BlogDetail(Page):
     date_published = models.DateField("Date article published", blank=True, null=True)
     body = StreamField(
         [
-            ('image', custom_blocks.ImageBlock()),
-            ('doc', DocumentChooserBlock()),
+            ('image', custom_blocks.ImageBlock(group="media")),
+            ('doc', DocumentChooserBlock(group="media")),
             ('page', PageChooserBlock()),
             ('call_to_action_1', custom_blocks.CallToAction1Block()),
-            ('corousel', custom_blocks.CarouselBlock()),
+            ('corousel', custom_blocks.CarouselBlock(group="media")),
             ('info', blocks.StaticBlock(
-                admin_text="ini namanya static blocks"
+                admin_text="ini namanya static blocks",
+                group="SEO"
             )),
-            ('faq', custom_blocks.FAQListBlock()),
+            ('faq', custom_blocks.FAQListBlock(group="SEO")),
+            ('paragraph', custom_blocks.ParagraphBlock())
         ],
         # block_counts={
         #     'text': {'min_num':1},

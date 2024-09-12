@@ -11,14 +11,14 @@ class TextBlock(blocks.TextBlock):
             required=False,
         )
     class Meta:
-        template = "components/text_block.html"
+        template = "blocks/text_block.html"
         group="ikan"
-        
+
 class InfoBlock(blocks.StaticBlock):
     class Meta:
         admin_text = "ini namanya info block"
         label = "Info"
-        template = "components/info_block.html"
+        template = "blocks/info_block.html"
         group="ikan"
 
 class FAQBlock(blocks.StructBlock):
@@ -33,7 +33,7 @@ class FAQListBlock(blocks.ListBlock):
         min_num = 1
         max_num = 5
         label = "FAQ"
-        template = "components/faq_list_block.html"
+        template = "blocks/faq_list_block.html"
 
 class CarouselBlock(blocks.StreamBlock):
     image = ImageChooserBlock()
@@ -43,7 +43,7 @@ class CarouselBlock(blocks.StreamBlock):
     ])
     class Meta:
         label = "Carousel"
-        template = "components/carousel_block.html"
+        template = "blocks/carousel_block.html"
 
 class CallToAction1Block(blocks.StructBlock):
     text = blocks.RichTextBlock(
@@ -57,8 +57,14 @@ class CallToAction1Block(blocks.StructBlock):
     )
     class Meta:
         label = "CTA #1"
-        template = "components/call_to_action_1_block.html"
+        template = "blocks/call_to_action_1_block.html"
 
 class ImageBlock(ImageChooserBlock):
     class Meta:
-        template = "components/image_block.html"
+        template = "blocks/image_block.html"
+
+class ParagraphBlock(blocks.RichTextBlock):
+    class Meta:
+        features=['bold', 'italic', 'link', 'code']
+        icon="pilcrow"
+        template = "blocks/paragraph_block.html"
