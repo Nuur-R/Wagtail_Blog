@@ -1,11 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./search/templates/**/*.html",
-    "./home/templates/**/*.html",
-    "./Wagtail_Blog/templates/**/*.html",
-    "./Wagtail_Blog/base/templates/**/*.html",
-    "./Wagtail_Blog/blog/templates/**/*.html",
+    "../search/templates/**/*.html",
+    "../home/templates/**/*.html",
+    "../Wagtail_Blog/templates/**/*.html",
+    "../Wagtail_Blog/base/templates/**/*.html",
+    "../Wagtail_Blog/blog/templates/**/*.html",
   ],
   theme: {
     extend: {},
